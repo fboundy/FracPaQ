@@ -200,8 +200,6 @@ if get(hObject, 'Value') || get(handles.checkbox_densitymap, 'Value')
     set(handles.checkbox_showcircles, 'Enable', 'on') ; 
     set(handles.edit_numscancircles, 'Enable', 'on') ; 
     set(handles.label_numscancircles, 'Enable', 'on') ; 
-    set(handles.edit_circlespacing, 'Enable', 'on') ; 
-    set(handles.label_circlespacing, 'Enable', 'on') ; 
     set(handles.checkbox_rotategrid, 'Enable', 'on') ; 
     if get(handles.checkbox_rotategrid, 'Value')
         set(handles.label_gridrotation, 'Enable', 'on') ;     
@@ -213,9 +211,6 @@ else
     set(handles.edit_numscancircles, 'Enable', 'off') ; 
     set(handles.edit_numscancircles, 'Value', 0) ; 
     set(handles.label_numscancircles, 'Enable', 'off') ; 
-    set(handles.edit_circlespacing, 'Enable', 'off') ; 
-    set(handles.edit_circlespacing, 'Value', 0) ; 
-    set(handles.label_circlespacing, 'Enable', 'off') ; 
     set(handles.checkbox_rotategrid, 'Enable', 'off') ; 
 %    set(handles.checkbox_rotategrid, 'Value', 0) ; 
     set(handles.edit_gridrotation, 'Enable', 'off') ;
@@ -235,8 +230,6 @@ if get(hObject, 'Value') || get(handles.checkbox_intensitymap, 'Value')
     set(handles.checkbox_showcircles, 'Enable', 'on') ; 
     set(handles.edit_numscancircles, 'Enable', 'on') ; 
     set(handles.label_numscancircles, 'Enable', 'on') ; 
-    set(handles.edit_circlespacing, 'Enable', 'on') ; 
-    set(handles.label_circlespacing, 'Enable', 'on') ; 
     set(handles.checkbox_rotategrid, 'Enable', 'on') ; 
     if get(handles.checkbox_rotategrid, 'Value')
         set(handles.label_gridrotation, 'Enable', 'on') ;     
@@ -248,9 +241,6 @@ else
     set(handles.edit_numscancircles, 'Enable', 'off') ; 
     set(handles.edit_numscancircles, 'Value', 0) ; 
     set(handles.label_numscancircles, 'Enable', 'off') ; 
-    set(handles.edit_circlespacing, 'Enable', 'off') ; 
-    set(handles.edit_circlespacing, 'Value', 0) ; 
-    set(handles.label_circlespacing, 'Enable', 'off') ; 
     set(handles.checkbox_rotategrid, 'Enable', 'off') ; 
 %    set(handles.checkbox_rotategrid, 'Value', 0) ; 
     set(handles.edit_gridrotation, 'Enable', 'off') ; 
@@ -556,16 +546,7 @@ function edit_numscancircles_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_numscancircles as text
 %        str2double(get(hObject,'String')) returns contents of edit_numscancircles as a double
- if length(handles.traces) > 0
-        nCount = str2double(get(hObject,'String'));
-        if get(handles.checkbox_rotategrid, 'Value')
-            rotation = round(str2double(get(handles.edit_gridrotation, 'String'))) ; 
-        else
-            rotation = 0;
-        end
-        [dist, iCount, jCount] = circleSpacingFromNumber(handles.traces, rotation, nCount);
-        set(handles.edit_circlespacing,'String', num2str(dist,'%.1f'));
-    end
+
 
 % --- Executes during object creation, after setting all properties.
 function edit_numscancircles_CreateFcn(hObject, eventdata, handles)
@@ -2500,19 +2481,14 @@ function edit_circlespacing_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_circlespacing as text
 %        str2double(get(hObject,'String')) returns contents of edit_circlespacing as a double
-   
-    if length(handles.traces) > 0
-        spacing = str2double(get(hObject,'String'));
-        if get(handles.checkbox_rotategrid, 'Value')
-            rotation = round(str2double(get(handles.edit_gridrotation, 'String'))) ; 
-        else
-            rotation = 0;
-        end
-        [dist, iCount, jCount] = circleNumberFromSpacing(handles.traces, rotation, spacing);
-        disp(min(iCount, jCount));
-        set(handles.edit_numscancircles,'String', num2str(min(iCount, jCount)));
-    end
 
+if get(handles.checkbox_rotategrid, 'Value')
+    rotation = get(handles.edit_gridrotation, 'Value');
+else
+    rotation = 0;
+end
+[x00, x10, x01, x11, y00, y10, y01, y11] = getRotatedMapLimits(traces, rotation);
+end
 
 % --- Executes during object creation, after setting all properties.
 function edit_circlespacing_CreateFcn(hObject, eventdata, handles)

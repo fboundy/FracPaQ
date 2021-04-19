@@ -2,7 +2,7 @@ function guiFracPaQ2Dpattern(traces, numPixelsPerMetre, ...
                              nBlocks, ... 
                              flag_intensitymap, flag_densitymap, ... 
                              flag_triangle, flag_showcircles, ...
-                             nCircles, flag_revY, flag_revX, sColour, nPixelsItoY)
+                             nCircles, flag_revY, flag_revX, sColour, nPixelsItoY, grid_angle)
 %   guiFracPaQ2Dpattern.m
 %       calculates and plots statistics of trace segment patterns
 %
@@ -46,11 +46,41 @@ else
     sUnits = ' pixels' ; 
 end 
 
+
 [xMin, xMax, yMin, yMax] = getMapLimits(traces) ; 
+%iLength = xMax - xMin ;
+%jLength = yMax - yMin ;
+
+TraceLimits = getRotatedMapLimits(traces, grid_angle);
+
+x00 = TraceLimits(1,1);
+x01 = TraceLimits(1,2);
+x10 = TraceLimits(1,3);
+x11 = TraceLimits(1,4);
+
+y00 = TraceLimits(2,1);
+y01 = TraceLimits(2,2);
+y10 = TraceLimits(2,3);
+y11 = TraceLimits(2,4);
+
+disp('Rotated');
+disp('-------');
+disp(['P00: ', num2str(x00, '%12.0F'), ', ', num2str(y00, '%12.0f')]) ;
+disp(['P10: ', num2str(x10, '%12.0F'), ', ', num2str(y10, '%12.0f')]) ;
+disp(['P01: ', num2str(x01, '%12.0F'), ', ', num2str(y01, '%12.0f')]) ;
+disp(['P11: ', num2str(x11, '%12.0F'), ', ', num2str(y11, '%12.0f')]) ;
+disp(' ');
+xv = [x10, x00, x01];
+yv = [y10, y00, y01];
+
+
+jLength = hypot((x01 - x00),(y01 - y00));
+iLength = hypot((x10 - x00),(y10 - y00));
 
 numTraces = length(traces) ;
 traceLengths = [ traces.segmentLength ] ;
-mapArea = (xMax - xMin) * (yMax - yMin) ; 
+% mapArea = (xMax - xMin) * (yMax - yMin) ; 
+mapArea = iLength * jLength;
 
 if flag_intensitymap || flag_densitymap || flag_showcircles
     
@@ -66,47 +96,51 @@ if flag_intensitymap || flag_densitymap || flag_showcircles
 %         rCircle = 0.99 * min(xDeltaCircle, yDeltaCircle) / 2 ;
     
     %% X dimension is longer than y
-    if ( xMax - xMin ) > ( yMax - yMin )
-        yNumCircle = nCircles ;
-        yDeltaCircle = ( yMax - yMin ) / ( yNumCircle + 1 ) ;
+    if iLength >= jLength        
+        jNumCircle = nCircles ;
+
+        jDeltaCircle = jLength / ( jNumCircle + 1 ) ;
         %   set circle radius, as function of y increments
-        rCircle = 0.99 * yDeltaCircle / 2 ;
+        rCircle = 0.99 * jDeltaCircle / 2 ;
+
         % Calculate number of circles in x to match the image dimensions
         % based on the radius determined by the number of circles in y
-        xDeltaCircle=(rCircle*2)/0.99;
-        xNumCircle=floor((( xMax - xMin ) / xDeltaCircle) - 1);
+        iDeltaCircle=(rCircle*2)/0.99;
+        iNumCircle=floor((iLength / iDeltaCircle) - 1);
         
     %% Y dimension is longer than x
-    elseif ( xMax - xMin ) < ( yMax - yMin )
-        xNumCircle = nCircles ;
-        xDeltaCircle = ( xMax - xMin ) / ( xNumCircle + 1 ) ;
+%    elseif ( xMax - xMin ) < ( yMax - yMin )
+    else       
+        iNumCircle = nCircles ;
+        
+        iDeltaCircle =  iLength  / ( iNumCircle + 1 ) ;
         %   set circle radius, as function of x increments
-        rCircle = 0.99 * xDeltaCircle / 2 ;
+        rCircle = 0.99 * iDeltaCircle / 2 ;
         % Calculate number of circles in y to match the image dimensions
         % based on the radius determined by the number of circles in x
-        yDeltaCircle=(rCircle*2)/0.99;
-        yNumCircle=floor((( yMax - yMin ) / yDeltaCircle) - 1);
+        jDeltaCircle=(rCircle*2)/0.99;
+        jNumCircle=floor((jLength / jDeltaCircle) - 1);
         
     %% X and y dimensions are equal
-    elseif ( xMax - xMin ) == ( yMax - yMin )
-        %   define circle centres
-        xNumCircle = nCircles ;
-        yNumCircle = nCircles ;
-        xDeltaCircle = ( xMax - xMin ) / ( xNumCircle + 1 ) ;
-        yDeltaCircle = ( yMax - yMin ) / ( yNumCircle + 1 ) ;
-        %   set circle radius, as function of x and y increments
-        rCircle = 0.99 * min(xDeltaCircle, yDeltaCircle) / 2 ;
+%    elseif ( xMax - xMin ) == ( yMax - yMin )
+%        %   define circle centres
+%        iNumCircle = nCircles ;
+%        jNumCircle = nCircles ;
+%        iDeltaCircle = ( iLength ) / ( iNumCircle + 1 ) ;
+%        jDeltaCircle = ( jLength ) / ( jNumCircle + 1 ) ;
+%        %   set circle radius, as function of x and y increments
+%        rCircle = 0.99 * min(iDeltaCircle, jDeltaCircle) / 2 ;
         
     end
     
     disp(' ') ;
     disp('Circular scan windows...') ;
-    disp(['Circle increment in X: ', num2str(xDeltaCircle, '%8.2E'), sUnits]) ;
-    disp(['Circle increment in Y: ', num2str(yDeltaCircle, '%8.2E'), sUnits]) ;
+    disp(['Circle increment in I: ', num2str(iDeltaCircle, '%8.2E'), sUnits]) ;
+    disp(['Circle increment in J: ', num2str(jDeltaCircle, '%8.2E'), sUnits]) ;
     disp(['Circle radius: ', num2str(rCircle, '%8.2E'), sUnits]) ;
     rCircleMetres = rCircle ;
-    I = zeros(yNumCircle, xNumCircle) ;
-    D = zeros(yNumCircle, xNumCircle) ;
+    I = zeros(jNumCircle, iNumCircle) ;
+    D = zeros(jNumCircle, iNumCircle) ;
     
 end ;
 
@@ -118,11 +152,15 @@ if flag_showcircles
     for k = 1:numTraces
         plot( [ traces(k).Node.x ]', [ traces(k).Node.y ]', 'LineWidth', 0.75, 'Color', sColour) ;
     end ;
+
+    line(xv,yv,'LineWidth', 0.25, 'Color', 'r');
     %   for each circle centre
-    for i = 1:xNumCircle
-        xCentreCircle = xMin + xDeltaCircle * i ;
-        for j = 1:yNumCircle
-            yCentreCircle = yMin + yDeltaCircle * j ;
+    for i = 1:iNumCircle
+ %       xCentreCircle = xMin + iDeltaCircle * i ;
+        for j = 1:jNumCircle
+            
+ %           yCentreCircle = yMin + jDeltaCircle * j ;
+            [xCentreCircle, yCentreCircle] =  ij2xy(i, j, x00, x01, x10, y00, y01, y10, jDeltaCircle, jDeltaCircle);
             %   *** need to draw the circles actual size here
             %   use rectangle() with 'Curvature' at [1 1] 
             pos = [ xCentreCircle - rCircle, yCentreCircle - rCircle, 2*rCircle, 2*rCircle ] ; 
@@ -132,8 +170,20 @@ if flag_showcircles
     hold off ;
     axis on equal ;
     box on ;
-    xlim([xMin xMax]) ;
-    ylim([yMin yMax]) ;
+ 
+    disp(['P00: ', num2str(x00, '%12.8E'), ', ', num2str(y00, '%12.8E')]) ;
+    disp(['P10: ', num2str(x10, '%12.8E'), ', ', num2str(y10, '%12.8E')]) ;
+    disp(['P01: ', num2str(x01, '%12.8E'), ', ', num2str(y01, '%12.8E')]) ;
+ 
+    
+    if x00 < x01
+        xlim([x00 x10+x01-x00]) ;
+        ylim([y01 y10]);
+    else
+        xlim([x01 x10]);
+        ylim([y00 y10+y01-y00]) ;
+    end;
+    
     if flag_revX
         set(gca, 'XDir', 'reverse') ;
     end ;
@@ -154,20 +204,23 @@ if flag_intensitymap || flag_densitymap
     
     hWait = waitbar(0, 'Calculating scan circle intersections...', 'Name', 'Intensity/Density maps') ;
     nCircle = 0 ;
-    
+    disp(['p00:' , num2str(x00,'%10.0f'), ',', num2str(y00,'%10.0f'),' p01:', num2str(x01,'%10.0f'), ',',  num2str(y01,'%10.0f'), ' p10:', num2str(x10,'%10.0f'), ',', num2str(y10,'%10.0f')]);
+    disp(['Ni: ' , num2str(iNumCircle,'%4.0f'), ' Nj: ', num2str(jNumCircle,'%4.0f'),' Li: ', num2str(iLength,'%10.0f'), ' Lj: ',  num2str(jLength,'%10.0f'), ' p10:', num2str(x10,'%10.0f'), ',', num2str(y10,'%10.0f')]);
+
     %   for each circle centre
-    for i = 1:xNumCircle
+    for i = 1:iNumCircle
         
-        xCentreCircle = xMin + xDeltaCircle * i ;
+ %       xCentreCircle = xMin + iDeltaCircle * i ;
         
-        for j = 1:yNumCircle
+        for j = 1:jNumCircle
             
             nCircle = nCircle + 1 ;
             
-            waitbar(nCircle/(xNumCircle*yNumCircle), hWait, 'Calculating scan circle intersections...') ;
+            waitbar(nCircle/(iNumCircle*jNumCircle), hWait, 'Calculating scan circle intersections...') ;
             
-            yCentreCircle = yMin + yDeltaCircle * j ;
-            
+ %           yCentreCircle = yMin + jDeltaCircle * j ;
+            [xCentreCircle, yCentreCircle] =  ij2xy(i, j, x00, x01, x10, y00, y01, y10, iDeltaCircle, jDeltaCircle);
+            disp(['i: ', num2str(i,'%4.0f'), ' j: ', num2str(j,'%4.0f'), ' xy:' , num2str(xCentreCircle,'%10.0f'), ', ', num2str(yCentreCircle,'%10.0f')]);
             n = 0 ;
             m = 0 ;
 
@@ -339,11 +392,11 @@ if flag_intensitymap || flag_densitymap
         %   plot trace intensity, I
         f = figure ;
 %         contourf(X2, Y2, Inew, nContours) ;
-        xv = xMin+xDeltaCircle:xDeltaCircle:xMax-xDeltaCircle ; 
-        yv = yMin+yDeltaCircle:yDeltaCircle:yMax-yDeltaCircle ; 
+        xv = (xMin+iDeltaCircle):iDeltaCircle:(xMax-iDeltaCircle) ; 
+        yv = (yMin+jDeltaCircle):jDeltaCircle:(yMax-jDeltaCircle) ; 
         
-        imagesc(xv, yv, I) ; 
-
+        imagesc(xv, yv, I);
+                
         ax = gca ; 
         ax.YDir = 'normal' ;
         axis on equal ;
@@ -389,11 +442,11 @@ if flag_intensitymap || flag_densitymap
         f = figure ;
 %         contourf(X2, Y2, Dnew, nContours) ;
         
-        xv = xMin+xDeltaCircle:xDeltaCircle:xMax-xDeltaCircle ; 
-        yv = yMin+yDeltaCircle:yDeltaCircle:yMax-yDeltaCircle ; 
+        xv = (xMin+iDeltaCircle):iDeltaCircle:(xMax-iDeltaCircle) ; 
+        yv = (yMin+jDeltaCircle):jDeltaCircle:(yMax-jDeltaCircle) ; 
         
         imagesc(xv, yv, D) ; 
-
+        
         ax = gca ; 
         ax.YDir = 'normal' ;
 
@@ -440,13 +493,13 @@ if flag_intensitymap || flag_densitymap
     fn2 = ['FracPaQ2Ddensity', sTag, '.txt'] ; 
     fidIntensity = fopen(fn1, 'wt') ;
     fidDensity = fopen(fn2, 'wt') ;
-    for i = 1:xNumCircle
+    for i = 1:iNumCircle
         
-        xCentreCircle = xMin + xDeltaCircle * i ;
+        xCentreCircle = xMin + iDeltaCircle * i ;
         
-        for j = 1:yNumCircle
+        for j = 1:jNumCircle
             
-            yCentreCircle = yMin + yDeltaCircle * j ;
+            yCentreCircle = yMin + jDeltaCircle * j ;
             
             fprintf(fidIntensity, '%8.1f %8.1f %14.8f\n', xCentreCircle, yCentreCircle, I(j, i)) ;
             fprintf(fidDensity, '%8.1f %8.1f %14.8f\n', xCentreCircle, yCentreCircle, D(j, i)) ;
@@ -461,3 +514,45 @@ end ;
 
 
 end 
+
+function [x00, x01, x10, y00, y01, y10] = rotateGrid(x0, x1, y0, y1, theta)
+
+    lx = x1 - x0;
+    ly = y1 - y0;
+
+    if theta < 0
+        phi = deg2rad(90 - theta);
+    else
+        phi = deg2rad(theta);
+    end;
+    
+    dx0 = ly * sin(phi) * cos(phi);
+    dx1 = lx * sin(phi)^2;
+    dy0 = ly * sin(phi)^2;
+    dy1 = lx * sin(phi) * cos(phi);
+    
+    x00 = x0 - dx0 ;
+    y00 = y0 + dy0 ;
+    x01 = x0 + dx1 ;
+    y01 = y1 + dy1 ;
+    x10 = x1 - dx1 ;
+    y10 = y0 - dy1 ;
+end
+
+function [x, y] = ij2xy(i, j, x00, x01, x10, y00, y01, y10, di, dj)
+% returns a pair of x, y coordinates for grid index i, j in a grid defined
+% with origin (x00, y00), x axis (x10, y10) and y axis (x01, y01) and
+% resolution di and dj
+    lj = hypot((x01 - x00),(y01 - y00));
+    li = hypot((x10 - x00),(y10 - y00));
+
+    dxi = di * (x10 - x00) / li;
+    dxj = dj * (x01 - x00) / lj;
+    
+    dyi = di * (y10 - y00) / li;
+    dyj = dj * (y01 - y00) / lj;
+    
+    x = x00 + i * dxi + j * dxj;
+    y = y00 + i * dyi + j * dyj;
+end
+

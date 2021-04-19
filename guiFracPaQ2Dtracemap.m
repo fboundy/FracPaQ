@@ -31,6 +31,7 @@ function guiFracPaQ2Dtracemap(traces, nPixelsPerMetre, nNorth, ...
 % USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [xMin, xMax, yMin, yMax] = getMapLimits(traces) ; 
+global sTag ; 
 
 if nPixelsPerMetre > 0 
     sUnits = ' metres' ; 
@@ -356,7 +357,9 @@ if flag_sliptendency || flag_dilationtendency || flag_fracsuscep || flag_CSF
 end 
 
 if flag_sliptendency 
-    
+    fn = ['FracPaQ2Dsliptendency', sTag, '.txt'] ; 
+    fid = fopen(fn, 'wt') ;
+
     %   1. slip tendency = shear stress/normal stress on the segment 
     f = figure ; 
     segmentColours = colormap(jet(100)) ; 
@@ -378,9 +381,12 @@ if flag_sliptendency
             plot( [ traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point2(1) ]', ...
                   [ traces(k).Segment(l).Point1(2), traces(k).Segment(l).Point2(2) ]', ...
                         'LineWidth', 0.75, 'color', segmentColours(iTs,:) ) ;
-
+            if not(isnan(iTs))
+                fprintf(fid, '%8.1f %8.1f %14.8f\n', traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point1(2), traces(k).Segment(l).TsNorm) ;
+                fprintf(fid, '%8.1f %8.1f %14.8f\n', traces(k).Segment(l).Point2(1), traces(k).Segment(l).Point2(2), traces(k).Segment(l).TsNorm) ;            
+                fprintf(fid, '999.0 999.0 999.0\n' ) ;
+            end
         end
-
     end 
     hold off ;
     colormap(segmentColours) ; 
@@ -419,10 +425,12 @@ if flag_sliptendency
     title({'Segment angles (equal area), colour-coded by T_s';''}) ; 
     %   save to file 
     guiPrint(f, 'FracPaQ2D_sliptendencyrose') ; 
-
+    fclose(fid);
 end ; 
 
 if flag_dilationtendency
+    fn = ['FracPaQ2Ddilationtendency', sTag, '.txt'] ; 
+    fid = fopen(fn, 'wt') ;
     
     %   2. dilation tendency on the segment 
     f = figure ; 
@@ -438,12 +446,18 @@ if flag_dilationtendency
             if iTd < 1 
                 iTd = 1 ; 
             end 
+            disp(iTd);
+            if iTd > 100 
+                iTd = 100 ; 
+            end 
             plot( [ traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point2(1) ]', ...
                   [ traces(k).Segment(l).Point1(2), traces(k).Segment(l).Point2(2) ]', ...
                         'LineWidth', 0.75, 'color', segmentColours(iTd,:) ) ;
 
+             fprintf(fid, '%8.1f %8.1f %14.8f\n', traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point1(2), traces(k).Segment(l).Td) ;
+             fprintf(fid, '%8.1f %8.1f %14.8f\n', traces(k).Segment(l).Point2(1), traces(k).Segment(l).Point2(2), traces(k).Segment(l).Td) ;
+             fprintf(fid, '999.0 999.0 999.0\n' ) ;
         end
-
     end
     hold off ;
     colormap(segmentColours) ; 
@@ -482,10 +496,12 @@ if flag_dilationtendency
     title({'Segment angles (equal area), colour-coded by T_d';''}) ; 
     %   save to file 
     guiPrint(f, 'FracPaQ2D_dilationtendencyrose') ; 
-
+    fclose(fid);
 end 
 
 if flag_fracsuscep
+    fn = ['FracPaQ2Dfracsuscep', sTag, '.txt'] ; 
+    fid = fopen(fn, 'wt') ;
 
     f = figure ; 
     segmentColours = colormap(flipud(jet(100))) ; 
@@ -500,14 +516,19 @@ if flag_fracsuscep
             if iSf < 1 
                 iSf = 1 ; 
             end
+            if iSf > 100 
+                iSf = 100 ; 
+            end
 
             %   draw the segment, colour-coded 
             plot( [ traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point2(1) ]', ...
                   [ traces(k).Segment(l).Point1(2), traces(k).Segment(l).Point2(2) ]', ...
                         'LineWidth', 0.75, 'color', segmentColours(iSf, :) ) ;
 
+            fprintf(fid, '%8.1f %8.1f %14.8f\n', traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point1(2), traces(k).Segment(l).Sf) ;
+            fprintf(fid, '%8.1f %8.1f %14.8f\n', traces(k).Segment(l).Point2(1), traces(k).Segment(l).Point2(2), traces(k).Segment(l).Sf) ;     
+            fprintf(fid, '999.0 999.0 999.0\n' ) ;
         end
-
     end 
     hold off ;
     colormap(segmentColours) ; 
@@ -548,10 +569,12 @@ if flag_fracsuscep
     
     %   save to file 
     guiPrint(f, 'FracPaQ2D_fracsusceprose') ; 
-    
+    fclose(fid);    
 end 
 
 if flag_CSF 
+    fn = ['FracPaQ2DCSF', sTag, '.txt'] ; 
+    fid = fopen(fn, 'wt') ;
 
     f = figure ; 
     segmentColours = colormap(jet(100)) ; 
@@ -567,7 +590,10 @@ if flag_CSF
             plot( [ traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point2(1) ]', ...
                   [ traces(k).Segment(l).Point1(2), traces(k).Segment(l).Point2(2) ]', ...
                         'LineWidth', 0.75, 'color', segmentColours(iCSF, :) ) ;
-        end 
+            fprintf(fid, '%8.1f %8.1f %5.0f\n', traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point1(2), (iCSF-10) / 80) ;            
+            fprintf(fid, '%8.1f %8.1f %5.0f\n', traces(k).Segment(l).Point2(1), traces(k).Segment(l).Point2(2), (iCSF-10) / 80) ;            
+            fprintf(fid, '999.0 999.0 999.0\n' ) ;
+        end
     end
     hold off ;
     colormap(segmentColours) ; 
@@ -613,7 +639,7 @@ if flag_CSF
     
     %   save to file 
     guiPrint(f, 'FracPaQ2D_CSFrose') ; 
-    
+    fclose(fid);    
 end 
 
 end 

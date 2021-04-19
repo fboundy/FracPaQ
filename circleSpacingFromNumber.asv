@@ -1,0 +1,16 @@
+function [dist, iCount, jCount] = circleSpacingFromNumber(traces, angle, number)
+   [[x00, x10, x01, x11, y00, y10, y01, y11] = getRotatedMapLimits(traces, angle);
+    Li = hypot((x01 - x00),(y01 - y00));
+    Lj = hypot((x10 - x00),(y10 - y00));
+    if Li >= Lj        
+        jCount = number;
+        dist = Lj / (jCount + 1);
+        iCount = floor((Li / dist) - 1);        
+    %% Y dimension is longer than x
+    else       
+        iCount = number;
+        dist = Li / (iCount + 1);
+        jCount = floor((Lj / dist) - 1);        
+    end
+end
+
