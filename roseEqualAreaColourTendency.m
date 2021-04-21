@@ -155,6 +155,9 @@ for i = 1:max(size(binAngles))-1
     if iCol < 1 
         iCol = 1 ; 
     end 
+    if iCol > 100
+        iCol = 100 ;
+    end
     colAngles2(j:j+1) = iCol ; 
 
     %   on to the next rose 'petal' 

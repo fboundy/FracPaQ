@@ -43,7 +43,7 @@ function varargout = guiFracPaQ2D(varargin)
 
 % Edit the above text to modify the response to help guiFracPaQ2D
 
-% Last Modified by GUIDE v2.5 15-Apr-2021 13:39:45
+% Last Modified by GUIDE v2.5 21-Apr-2021 15:55:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -200,6 +200,8 @@ if get(hObject, 'Value') || get(handles.checkbox_densitymap, 'Value')
     set(handles.checkbox_showcircles, 'Enable', 'on') ; 
     set(handles.edit_numscancircles, 'Enable', 'on') ; 
     set(handles.label_numscancircles, 'Enable', 'on') ; 
+    set(handles.edit_circlespacing, 'Enable', 'on') ; 
+    set(handles.label_circlespacing, 'Enable', 'on') ; 
     set(handles.checkbox_rotategrid, 'Enable', 'on') ; 
     if get(handles.checkbox_rotategrid, 'Value')
         set(handles.label_gridrotation, 'Enable', 'on') ;     
@@ -211,6 +213,9 @@ else
     set(handles.edit_numscancircles, 'Enable', 'off') ; 
     set(handles.edit_numscancircles, 'Value', 0) ; 
     set(handles.label_numscancircles, 'Enable', 'off') ; 
+    set(handles.edit_circlespacing, 'Enable', 'off') ; 
+    set(handles.edit_circlespacing, 'Value', 0) ; 
+    set(handles.label_circlespacing, 'Enable', 'off') ; 
     set(handles.checkbox_rotategrid, 'Enable', 'off') ; 
 %    set(handles.checkbox_rotategrid, 'Value', 0) ; 
     set(handles.edit_gridrotation, 'Enable', 'off') ;
@@ -230,6 +235,8 @@ if get(hObject, 'Value') || get(handles.checkbox_intensitymap, 'Value')
     set(handles.checkbox_showcircles, 'Enable', 'on') ; 
     set(handles.edit_numscancircles, 'Enable', 'on') ; 
     set(handles.label_numscancircles, 'Enable', 'on') ; 
+    set(handles.edit_circlespacing, 'Enable', 'on') ; 
+    set(handles.label_circlespacing, 'Enable', 'on') ; 
     set(handles.checkbox_rotategrid, 'Enable', 'on') ; 
     if get(handles.checkbox_rotategrid, 'Value')
         set(handles.label_gridrotation, 'Enable', 'on') ;     
@@ -241,6 +248,9 @@ else
     set(handles.edit_numscancircles, 'Enable', 'off') ; 
     set(handles.edit_numscancircles, 'Value', 0) ; 
     set(handles.label_numscancircles, 'Enable', 'off') ; 
+    set(handles.edit_circlespacing, 'Enable', 'off') ; 
+    set(handles.edit_circlespacing, 'Value', 0) ; 
+    set(handles.label_circlespacing, 'Enable', 'off') ; 
     set(handles.checkbox_rotategrid, 'Enable', 'off') ; 
 %    set(handles.checkbox_rotategrid, 'Value', 0) ; 
     set(handles.edit_gridrotation, 'Enable', 'off') ; 
@@ -546,7 +556,16 @@ function edit_numscancircles_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_numscancircles as text
 %        str2double(get(hObject,'String')) returns contents of edit_numscancircles as a double
-
+ if length(handles.traces) > 0
+        nCount = str2double(get(hObject,'String'));
+        if get(handles.checkbox_rotategrid, 'Value')
+            rotation = round(str2double(get(handles.edit_gridrotation, 'String'))) ; 
+        else
+            rotation = 0;
+        end
+        [dist, iCount, jCount] = circleSpacingFromNumber(handles.traces, rotation, nCount);
+        set(handles.edit_circlespacing,'String', num2str(dist,'%.1f'));
+    end
 
 % --- Executes during object creation, after setting all properties.
 function edit_numscancircles_CreateFcn(hObject, eventdata, handles)
@@ -860,7 +879,7 @@ if get(handles.radiobutton_image, 'Value')
 else 
     
     sFilename = [ char(handles.selpath), char(handles.selfile) ] ; 
-    
+    disp(sFilename);
     %   convert .svg file to .txt file 
     if ~isempty(strfind(sFilename, '.svg'))  
         
@@ -2481,14 +2500,19 @@ function edit_circlespacing_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_circlespacing as text
 %        str2double(get(hObject,'String')) returns contents of edit_circlespacing as a double
+   
+    if length(handles.traces) > 0
+        spacing = str2double(get(hObject,'String'));
+        if get(handles.checkbox_rotategrid, 'Value')
+            rotation = round(str2double(get(handles.edit_gridrotation, 'String'))) ; 
+        else
+            rotation = 0;
+        end
+        [dist, iCount, jCount] = circleNumberFromSpacing(handles.traces, rotation, spacing);
+        disp(min(iCount, jCount));
+        set(handles.edit_numscancircles,'String', num2str(min(iCount, jCount)));
+    end
 
-if get(handles.checkbox_rotategrid, 'Value')
-    rotation = get(handles.edit_gridrotation, 'Value');
-else
-    rotation = 0;
-end
-[x00, x10, x01, x11, y00, y10, y01, y11] = getRotatedMapLimits(traces, rotation);
-end
 
 % --- Executes during object creation, after setting all properties.
 function edit_circlespacing_CreateFcn(hObject, eventdata, handles)
@@ -2500,4 +2524,83 @@ function edit_circlespacing_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton_saveconfig.
+function pushbutton_saveconfig_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_saveconfig (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+sDefaultName = [get(handles.edit_FilenameTag,'String'),'.fpq'];
+[sFile, sPath] = uiputfile(sDefaultName);
+
+if ~isequal(sFile,0) && ~isequal(sPath,0)
+    hMain = get(hObject,'parent');
+    hAll = findall(hMain, 'Type', 'UIControl');
+    S.Control=struct('Tag',{},'Style',{},'Enable',{},'Visible',{},'Value',{}, 'String',{});
+    
+    if isfield(handles, 'selfile')
+        S.File=struct('Name',char(handles.selfile),'Path',char(handles.selpath));
+    end
+    for i = 1:length(hAll)
+        S.Control(i).Tag = get(hAll(i),'Tag');
+        S.Control(i).Style = get(hAll(i),'Style');
+        S.Control(i).Enable = get(hAll(i),'Enable');
+        S.Control(i).Visible = get(hAll(i),'Visible');
+ %       if get(hAll(i),'Style') ~= "pushbutton" && get(hAll(i),'Style') ~= "text" && get(hAll(i),'Style') ~= "popupmenu"            
+ %           if get(hAll(i),'Style') == "edit"
+                S.Control(i).String = get(hAll(i),'String');
+ %           else
+                S.Control(i).Value = get(hAll(i),'Value');
+ %           end        
+ %       end
+    end
+
+    writestruct(S,[sPath,sFile],"FileType","xml");
+end
+
+
+% --- Executes on button press in pushbutton_loadconfig.
+function pushbutton_loadconfig_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_loadconfig (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+sFileTypes = {'*.fpq'} ; 
+
+%[sFile, sPath] = uiputfile(sDefaultName, sFileTypes);
+[sFile, sPath] = uigetfile(sFileTypes);
+
+if ~isequal(sFile,0) && ~isequal(sPath,0)
+    S = readstruct([sPath,sFile],"FileType","xml");
+ %   disp(S);
+ %   disp(length(S.Control));
+    drawnow limitrate nocallbacks;
+    f = waitbar(0, ['Loading Config ',sFile]);
+ 
+    for i = 1:length(S.Control)
+        waitbar(i / length(S.Control), f);
+        h = findobj('Tag', S.Control(i).Tag);
+        if length(h) > 0
+            set(h,'Visible', S.Control(i).Visible);
+            set(h,'Enable', S.Control(i).Enable);
+ %           disp([get(h, 'Tag'), ': ', get(h, 'Style')]);
+            if get(h,'Style') ~= "pushbutton" && get(h,'Style') ~= "text" && get(h,'Style') ~= "popupmenu"            
+                if get(h,'Style') == "edit"
+                    set(h, 'String', S.Control(i).String);
+                else
+                    set(h, 'Value', S.Control(i).Value);
+                end
+            end
+        end
+    end
+    close(f);
+    drawnow
+    if isfield(S, 'Field')
+        handles.selfile = S.File.Name;
+        handles.selpath = S.File.Path;
+        disp(
+        guidata(handles.pushbutton_browse, handles);
+    end
 end

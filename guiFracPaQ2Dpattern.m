@@ -63,13 +63,13 @@ y01 = TraceLimits(2,2);
 y10 = TraceLimits(2,3);
 y11 = TraceLimits(2,4);
 
-disp('Rotated');
-disp('-------');
-disp(['P00: ', num2str(x00, '%12.0F'), ', ', num2str(y00, '%12.0f')]) ;
-disp(['P10: ', num2str(x10, '%12.0F'), ', ', num2str(y10, '%12.0f')]) ;
-disp(['P01: ', num2str(x01, '%12.0F'), ', ', num2str(y01, '%12.0f')]) ;
-disp(['P11: ', num2str(x11, '%12.0F'), ', ', num2str(y11, '%12.0f')]) ;
-disp(' ');
+%disp('Rotated');
+%disp('-------');
+%disp(['P00: ', num2str(x00, '%12.0F'), ', ', num2str(y00, '%12.0f')]) ;
+%disp(['P10: ', num2str(x10, '%12.0F'), ', ', num2str(y10, '%12.0f')]) ;
+%disp(['P01: ', num2str(x01, '%12.0F'), ', ', num2str(y01, '%12.0f')]) ;
+%disp(['P11: ', num2str(x11, '%12.0F'), ', ', num2str(y11, '%12.0f')]) ;
+%disp(' ');
 xv = [x10, x00, x01];
 yv = [y10, y00, y01];
 
@@ -171,9 +171,9 @@ if flag_showcircles
     axis on equal ;
     box on ;
  
-    disp(['P00: ', num2str(x00, '%12.8E'), ', ', num2str(y00, '%12.8E')]) ;
-    disp(['P10: ', num2str(x10, '%12.8E'), ', ', num2str(y10, '%12.8E')]) ;
-    disp(['P01: ', num2str(x01, '%12.8E'), ', ', num2str(y01, '%12.8E')]) ;
+ %   disp(['P00: ', num2str(x00, '%12.8E'), ', ', num2str(y00, '%12.8E')]) ;
+ %   disp(['P10: ', num2str(x10, '%12.8E'), ', ', num2str(y10, '%12.8E')]) ;
+ %   disp(['P01: ', num2str(x01, '%12.8E'), ', ', num2str(y01, '%12.8E')]) ;
  
     
     if x00 < x01
@@ -204,8 +204,8 @@ if flag_intensitymap || flag_densitymap
     
     hWait = waitbar(0, 'Calculating scan circle intersections...', 'Name', 'Intensity/Density maps') ;
     nCircle = 0 ;
-    disp(['p00:' , num2str(x00,'%10.0f'), ',', num2str(y00,'%10.0f'),' p01:', num2str(x01,'%10.0f'), ',',  num2str(y01,'%10.0f'), ' p10:', num2str(x10,'%10.0f'), ',', num2str(y10,'%10.0f')]);
-    disp(['Ni: ' , num2str(iNumCircle,'%4.0f'), ' Nj: ', num2str(jNumCircle,'%4.0f'),' Li: ', num2str(iLength,'%10.0f'), ' Lj: ',  num2str(jLength,'%10.0f'), ' p10:', num2str(x10,'%10.0f'), ',', num2str(y10,'%10.0f')]);
+ %   disp(['p00:' , num2str(x00,'%10.0f'), ',', num2str(y00,'%10.0f'),' p01:', num2str(x01,'%10.0f'), ',',  num2str(y01,'%10.0f'), ' p10:', num2str(x10,'%10.0f'), ',', num2str(y10,'%10.0f')]);
+ %   disp(['Ni: ' , num2str(iNumCircle,'%4.0f'), ' Nj: ', num2str(jNumCircle,'%4.0f'),' Li: ', num2str(iLength,'%10.0f'), ' Lj: ',  num2str(jLength,'%10.0f'), ' p10:', num2str(x10,'%10.0f'), ',', num2str(y10,'%10.0f')]);
 
     %   for each circle centre
     for i = 1:iNumCircle
@@ -220,7 +220,7 @@ if flag_intensitymap || flag_densitymap
             
  %           yCentreCircle = yMin + jDeltaCircle * j ;
             [xCentreCircle, yCentreCircle] =  ij2xy(i, j, x00, x01, x10, y00, y01, y10, iDeltaCircle, jDeltaCircle);
-            disp(['i: ', num2str(i,'%4.0f'), ' j: ', num2str(j,'%4.0f'), ' xy:' , num2str(xCentreCircle,'%10.0f'), ', ', num2str(yCentreCircle,'%10.0f')]);
+ %           disp(['i: ', num2str(i,'%4.0f'), ' j: ', num2str(j,'%4.0f'), ' xy:' , num2str(xCentreCircle,'%10.0f'), ', ', num2str(yCentreCircle,'%10.0f')]);
             n = 0 ;
             m = 0 ;
 

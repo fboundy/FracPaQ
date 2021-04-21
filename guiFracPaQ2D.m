@@ -43,7 +43,7 @@ function varargout = guiFracPaQ2D(varargin)
 
 % Edit the above text to modify the response to help guiFracPaQ2D
 
-% Last Modified by GUIDE v2.5 15-Apr-2021 13:39:45
+% Last Modified by GUIDE v2.5 21-Apr-2021 15:55:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -879,7 +879,7 @@ if get(handles.radiobutton_image, 'Value')
 else 
     
     sFilename = [ char(handles.selpath), char(handles.selfile) ] ; 
-    
+    disp(sFilename);
     %   convert .svg file to .txt file 
     if ~isempty(strfind(sFilename, '.svg'))  
         
@@ -2524,4 +2524,83 @@ function edit_circlespacing_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton_saveconfig.
+function pushbutton_saveconfig_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_saveconfig (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+sDefaultName = [get(handles.edit_FilenameTag,'String'),'.fpq'];
+[sFile, sPath] = uiputfile(sDefaultName);
+
+if ~isequal(sFile,0) && ~isequal(sPath,0)
+    hMain = get(hObject,'parent');
+    hAll = findall(hMain, 'Type', 'UIControl');
+    S.Control=struct('Tag',{},'Style',{},'Enable',{},'Visible',{},'Value',{}, 'String',{});
+    
+    if isfield(handles, 'selfile')
+        S.File=struct('Name',char(handles.selfile),'Path',char(handles.selpath));
+    end
+    for i = 1:length(hAll)
+        S.Control(i).Tag = get(hAll(i),'Tag');
+        S.Control(i).Style = get(hAll(i),'Style');
+        S.Control(i).Enable = get(hAll(i),'Enable');
+        S.Control(i).Visible = get(hAll(i),'Visible');
+        if get(hAll(i),'Style') ~= "pushbutton" && get(hAll(i),'Style') ~= "text" && get(hAll(i),'Style') ~= "popupmenu"            
+            if get(hAll(i),'Style') == "edit"
+                S.Control(i).String = get(hAll(i),'String');
+            else
+                S.Control(i).Value = get(hAll(i),'Value');
+            end        
+        end
+    end
+
+    writestruct(S,[sPath,sFile],"FileType","xml");
+end
+
+
+% --- Executes on button press in pushbutton_loadconfig.
+function pushbutton_loadconfig_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_loadconfig (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+sFileTypes = {'*.fpq'} ; 
+
+[sFile, sPath] = uigetfile(sFileTypes);
+
+if ~isequal(sFile,0) && ~isequal(sPath,0)
+    S = readstruct([sPath,sFile],"FileType","xml");
+    drawnow limitrate nocallbacks;
+    f = waitbar(0, ['Loading Config ',sFile]);
+ 
+    for i = 1:length(S.Control)
+        waitbar(i / length(S.Control), f);
+        h = findobj('Tag', S.Control(i).Tag);
+        if length(h) > 0
+            set(h,'Visible', S.Control(i).Visible);
+            set(h,'Enable', S.Control(i).Enable);
+            if get(h,'Style') ~= "pushbutton" && get(h,'Style') ~= "text" && get(h,'Style') ~= "popupmenu"            
+                if get(h,'Style') == "edit"
+                    set(h, 'String', S.Control(i).String);
+                else
+                    set(h, 'Value', S.Control(i).Value);
+                end
+            end
+        end
+    end
+    close(f);
+    drawnow;
+
+    if isfield(S, 'File')
+        handles.selfile = S.File.Name;
+        handles.selpath = S.File.Path;
+        handles.iCurrentColour = 1;
+        handles.cstrColours = cellstr('[0, 0, 1]') ; 
+        guidata(handles.pushbutton_browse, handles);
+        
+        cla(handles.axes_tracemap);
+    end
 end

@@ -37,18 +37,20 @@ hWait = waitbar(0.5, 'Reading node file...', 'Name', 'Preview') ;
 
 nTraces = result.rows ; 
 nMaxNodes = ( result.max / 2 ) ; 
+disp(['Max Nodes: ', num2str(nMaxNodes)]);
 
 xMin = 9e32 ; 
 yMin = 9e32 ; 
 xMax = 0 ; 
 yMax = 0 ; 
+
 for i = 1:nTraces  
-    
+
     k = 1 ; 
     s = 0 ; 
-    
+
     for j = 1:nMaxNodes 
-        
+
         if ~isempty(listPoints(i, k)) && ~isnan(listPoints(i, k))
 
             if numPixelsPerMetre > 0 
@@ -58,63 +60,62 @@ for i = 1:nTraces
                 pointX = listPoints(i, k) ; 
                 pointY = listPoints(i, k+1) ; 
             end ; 
-            
+
             traces(i).Node(j).x = pointX ; 
             traces(i).Node(j).y = pointY ; 
             traces(i).maxCols = k + 1 ; 
-            
+
             %   add colour attribute for multicolour input files 
             traces(i).Colour = sColour ; 
-            
+
             k = k + 2 ; 
-            
+
             if pointX < xMin 
                 xMin = pointX ; 
             end ; 
-            
+
             if pointY < yMin 
                 yMin = pointY ; 
             end ; 
             if pointX > xMax 
                 xMax = pointX ; 
             end ; 
-            
+
             if pointY > yMax 
                 yMax = pointY ; 
             end ; 
-            
+
             if j > 1 
-                
+
                 %   check for duplicate points, e.g. from mistaken double
                 %   click in Adobe or Corel when building .SVG file
                 if pointX == traces(i).Node(j-1).x && ...  
                    pointY == traces(i).Node(j-1).y
-                   
+
                    continue ; 
-                   
+
                 else 
-                    
+
                     s = s + 1 ; 
-                
+
                     traces(i).Segment(s).Point1 = [ traces(i).Node(j-1).x, traces(i).Node(j-1).y ] ;
                     traces(i).Segment(s).Point2 = [ pointX, pointY ] ;
-                    
+
                 end ; 
-                
+
             end ; 
-            
+
         else 
-            
+
             break ; 
-            
+
         end ; 
 
     end ; 
-    
+
     traces(i).nSegments = s ; 
-    traces(i).nNodes = s + 1 ; 
-    
-end ; 
+    traces(i).nNodes = s + 1 ;             
+end 
 
 nSegments = sum([traces(:).nSegments]) ; 
 nNodes = sum([traces(:).nNodes]) ; 
