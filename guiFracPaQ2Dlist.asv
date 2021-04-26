@@ -89,7 +89,7 @@ for i = 1:nTraces
             j = j + 1;
         else
             if pointX == traces(i).Node(j-1).x && pointY == traces(i).Node(j-1).y
-                disp(['Duplicate nodes ',  num2str(j-1), ' & ', num2str(j) , ' on trace ', num2str(i), ' merged']);
+                disp('Duplicate node on [num2str(i), ' - ', num2str(j-1), ' - ', num2str(j)]);
                 flag_dup = 1;
             else
                 s = s + 1 ;

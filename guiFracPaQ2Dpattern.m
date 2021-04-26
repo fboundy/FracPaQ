@@ -224,24 +224,19 @@ if flag_intensitymap || flag_densitymap
             n = 0 ;
             m = 0 ;
 
-            for k = 1:numTraces
-                
+            for k = 1:numTraces              
                 for s = 1:traces(k).nSegments
-                    
                     bPoint1Inside = false ;
-                    bPoint2Inside = false ;
-                    
+                    bPoint2Inside = false ;                    
                     %           first end of line
-                    rPoint = sqrt( ( traces(k).Segment(s).Point1(1) - xCentreCircle )^2 ...
-                        + ( traces(k).Segment(s).Point1(2) - yCentreCircle )^2 ) ;
+                    rPoint = hypot((traces(k).Segment(s).Point1(1) - xCentreCircle),(traces(k).Segment(s).Point1(2) - yCentreCircle));
                     if rPoint < rCircleMetres
                         m = m + 1 ;
                         bPoint1Inside = true ;
                     end ;
                     
                     %           second end of line
-                    rPoint = sqrt( ( traces(k).Segment(s).Point2(1) - xCentreCircle )^2 ...
-                        + ( traces(k).Segment(s).Point2(2) - yCentreCircle )^2 ) ;
+                    rPoint = hypot((traces(k).Segment(s).Point2(1) - xCentreCircle),(traces(k).Segment(s).Point2(2) - yCentreCircle));
                     if rPoint < rCircleMetres
                         m = m + 1 ;
                         bPoint2Inside = true ;
@@ -258,14 +253,10 @@ if flag_intensitymap || flag_densitymap
                         n = n + 1 ;
                         
                     else
-                        
+                       
                         dx = traces(k).Segment(s).Point2(1) - traces(k).Segment(s).Point1(1) ;
                         dy = traces(k).Segment(s).Point2(2) - traces(k).Segment(s).Point1(2) ;
-                        dr = sqrt( dx^2 + dy^2 ) ;
-%                         Det = traces(k).Segment(s).Point1(1) * traces(k).Segment(s).Point2(2) - ...
-%                             traces(k).Segment(s).Point2(1) * traces(k).Segment(s).Point1(2) - ...
-%                             xCentreCircle * ( traces(k).Segment(s).Point2(2) - traces(k).Segment(s).Point1(2) ) + ...
-%                             yCentreCircle * ( traces(k).Segment(s).Point2(1) - traces(k).Segment(s).Point1(1) ) ;
+                        dr = hypot(dx, dy) ;
                          
                         x1new = traces(k).Segment(s).Point1(1) - xCentreCircle ; 
                         x2new = traces(k).Segment(s).Point2(1) - xCentreCircle ;

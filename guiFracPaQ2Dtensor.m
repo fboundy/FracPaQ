@@ -57,7 +57,15 @@ area = (xMax - xMin) * (yMax - yMin) ;
 
 %   calculate Oda F (fabric) tensor 
 tracePoles = traceAngles + 90. - northCorrection ; 
+
 [F2, F2pol] = getF2tensor(traceLengths, tracePoles, area) ; 
+for i = 1:length(traceLengths)
+    if traceLengths(i) == 0
+        disp(num2str(i));
+    end
+end
+disp(area);
+disp(F2);
 F0 = sum(eig(F2)) ; 
 Fmax = max(eig(F2)) ; 
 

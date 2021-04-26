@@ -378,6 +378,9 @@ if flag_sliptendency
             if isnan(iTs) 
                 iTs = 1 ; 
             end 
+            if iTs > 100
+                iTs = 100 ; 
+            end 
             plot( [ traces(k).Segment(l).Point1(1), traces(k).Segment(l).Point2(1) ]', ...
                   [ traces(k).Segment(l).Point1(2), traces(k).Segment(l).Point2(2) ]', ...
                         'LineWidth', 0.75, 'color', segmentColours(iTs,:) ) ;

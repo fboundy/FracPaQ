@@ -22,6 +22,10 @@ function [ nY, nX, nI ] = getConnectivity(traces, segments, xMin, yMin, xMax, yM
 % OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 % USE OR OTHER DEALINGS IN THE SOFTWARE.
 %
+%   Modified by Francis Boundy - April 2021
+%       hist3 replaced with hist3a
+%       fixed for cases where there are no X or Y nodes
+%
 %   Modified by Nikolai Andrianov (DTU, Denmark) - January 2019 
 %   Modified by Dave Healy (Aberdeen) - January 2019 
 %   Modified by Dave Healy (Aberdeen) - November 2019 
@@ -48,6 +52,7 @@ segments = segments(~any(isnan(segments),2),:) ;
 nInt = 0 ; 
 epsYnode = nPixelsItoY ; 
 disp(['Tolerance for accepting I node = Y node: ', num2str(epsYnode), ' units']) ; 
+
 
 for i = 1:size(segments,1) 
     
@@ -117,11 +122,22 @@ for i = 1:size(segments,1)
     
 end ; 
 
+
+disp('Initial I-Y-X node count, prior to I-node check:') ; 
+disp(['I: ', num2str(nI)]) ; 
+disp(['Y: ', num2str(nY)]) ; 
+disp(['X: ', num2str(nX)]) ; 
+
 nTraces = size(traces,2);
 nodeI = zeros(nTraces*2, 2);
 nI = size(nodeI, 1) ;
+
+
+% this block of code seems to do the checking to see if I nodes are
+% duplicated as Y nodes
+
 for i = 1:nTraces
-    
+
     % Get the coordinates of I nodes; each end of the trace 
     nNodesTrace = length(traces(i).Node) ; % Number of nodes in this trace
     indI1 = 2 * i - 1 ;
@@ -130,49 +146,38 @@ for i = 1:nTraces
     nodeI(indI1, 2) = traces(i).Node(1).y ;
     nodeI(indI2, 1) = traces(i).Node(nNodesTrace).x ;
     nodeI(indI2, 2) = traces(i).Node(nNodesTrace).y ;    
-    
-    %   one end of the trace... 
-    dist1 = distancePointEdge([nodeI(indI1,1), nodeI(indI1,2)], segments) ;
-    if sum(find(dist1(dist1>0) < epsYnode)) > 0 
-        
-        distY = distancePoints([nodeI(indI1,1), nodeI(indI1,2)], [xint', yint']) ; 
-        if sum(distY(distY<epsYnode)) > 0 
-%             nInt = nInt + 1 ; 
-%             nY = nY + 1 ; 
-%             %   get coords of this I, now a Y 
-%             xint(nInt) = nodeI(indI1,1) ; 
-%             yint(nInt) = nodeI(indI1,2) ; 
-%             fint(nInt) = 'Y' ;
-            %   remove this I node from the I list 
-            nI = nI - 1 ; 
-            nodeI(indI1,1:2) = NaN ; 
-        else 
-            continue ; 
+
+    if nY > 0
+
+        %   one end of the trace... 
+        dist1 = distancePointEdge([nodeI(indI1,1), nodeI(indI1,2)], segments) ;
+        if sum(find(dist1(dist1>0) < epsYnode)) > 0 
+
+            distY = distancePoints([nodeI(indI1,1), nodeI(indI1,2)], [xint', yint']) ; 
+            if sum(distY(distY<epsYnode)) > 0 
+                nI = nI - 1 ; 
+                nodeI(indI1,1:2) = NaN ; 
+            else 
+                continue ; 
+            end 
+
         end 
-        
-    end 
-    
-    %   and the other end of the trace... 
-    dist2 = distancePointEdge([nodeI(indI2,1), nodeI(indI2,2)], segments) ;
-    if sum(find(dist2(dist2>0) < epsYnode)) > 0 
-        
-        distY = distancePoints([nodeI(indI2,1), nodeI(indI2,2)], [xint', yint']) ; 
-        if sum(distY(distY<epsYnode)) > 0 
-%             nInt = nInt + 1 ; 
-%             nY = nY + 1 ; 
-%             %   get coords of this I, now a Y 
-%             xint(nInt) = nodeI(indI2,1) ; 
-%             yint(nInt) = nodeI(indI2,2) ; 
-%             fint(nInt) = 'Y' ;
-            %   remove this I node from the I list 
-            nI = nI - 1 ; 
-            nodeI(indI2,1:2) = NaN ; 
-        else 
-            continue ; 
+
+        %   and the other end of the trace... 
+        dist2 = distancePointEdge([nodeI(indI2,1), nodeI(indI2,2)], segments) ;
+        if sum(find(dist2(dist2>0) < epsYnode)) > 0 
+
+            distY = distancePoints([nodeI(indI2,1), nodeI(indI2,2)], [xint', yint']) ; 
+            if sum(distY(distY<epsYnode)) > 0 
+                %   remove this I node from the I list 
+                nI = nI - 1 ; 
+                nodeI(indI2,1:2) = NaN ; 
+            else 
+                continue ; 
+            end 
+
         end 
-        
-    end 
-    
+    end
 end
 
 disp('Initial I-Y-X node count, after I-node check:') ; 
@@ -207,32 +212,6 @@ if max(size(traces)) <= max(size(segments)) && nInt > 0
     
 end ;
 
-% disp('After removing duplicates and adjusting Y->X:') ; 
-% disp(['I: ', num2str(nI)]) ; 
-% disp(['Y: ', num2str(nY)]) ; 
-% disp(['X: ', num2str(nX)]) ; 
-
-% Replace the original implementation with the one below
-% %   also remove any I points that lie on the edge of the area; censoring 
-% xMaxr = round(xMax) ; 
-% yMaxr = round(yMax) ; 
-% for i = 1:size(traces,2) 
-% 
-%     maxNode = traces(i).nNodes ; 
-%     
-%     if round(traces(i).Node(1).x) == xMin || round(traces(i).Node(1).x) == xMaxr
-%         I = I - 1 ; 
-%     elseif round(traces(i).Node(1).y) == yMin || round(traces(i).Node(1).y) == yMaxr
-%         I = I - 1 ; 
-%     elseif round(traces(i).Node(maxNode).x) == xMin || round(traces(i).Node(maxNode).x) == xMaxr
-%         I = I - 1 ; 
-%     elseif round(traces(i).Node(maxNode).y) == xMax || round(traces(i).Node(maxNode).y) == yMaxr
-%         I = I - 1 ; 
-%     else 
-%         continue ; 
-%     end ; 
-%         
-% end ; 
 
 % Excluding the I nodes lying on boundaries
 ib = find( (nodeI(:,1) == xMin) | (nodeI(:,1) == xMax) | (nodeI(:,2) == yMin) | (nodeI(:,2) == yMax)) ;
@@ -244,6 +223,7 @@ nodeI = [nodeI(indI, 1), nodeI(indI, 2)] ;
 if sum(indY) > 0
     nodeI = setdiff(nodeI, [XU(indY,1), XU(indY,2)], 'stable', 'rows') ; 
 end 
+
 %   remove I nodes that coincide with X nodes; no double counting 
 if sum(indX) > 0
     nodeI = setdiff(nodeI, [XU(indX,1), XU(indX,2)], 'stable', 'rows') ; 
@@ -253,31 +233,26 @@ nodeIy = nodeI(~isnan(nodeI(:,2)),2) ;
 nodeI = [nodeIx, nodeIy] ; 
 nI = size(nodeI,1) ; 
 
-% %   remove Y nodes that coincide with X nodes; no double counting 
-% XY = setdiff([XU(indY,1), XU(indY,2)], [XU(indX,1), XU(indX,2)], 'stable', 'rows') ; 
-% Y = size(XY,1) ; 
-% 
-% % %   remove X nodes that coincide with Y nodes; no double counting 
-% % XX = setdiff([XU(indX,1), XU(indX,2)], [XU(indY,1), XU(indY,2)], 'stable', 'rows') ; 
-% XX = [XU(indX,1), XU(indX,2)] ; 
-% X = size(XX,1) ; 
-% 
+
 %   remove X nodes that coincide with Y nodes; no double counting 
-if sum(indX) > 0 && sum(indY) > 0 
-    XY = setdiff([XU(indY,1), XU(indY,2)], [XU(indX,1), XU(indX,2)], 'stable', 'rows') ; 
-else 
-    XY = [XU(indY,1), XU(indY,2)] ; 
-end
-nY = size(XY,1) ; 
+if nX > 0 && nY > 0
+    if sum(indX) > 0 && sum(indY) > 0 
+        XY = setdiff([XU(indY,1), XU(indY,2)], [XU(indX,1), XU(indX,2)], 'stable', 'rows') ; 
+    else 
+        XY = [XU(indY,1), XU(indY,2)] ; 
+    end
+    nY = size(XY,1) ; 
 
+    
 %   remove Y nodes that coincide with X nodes; no double counting 
-if sum(indX) > 0 && sum(indY) > 0 
-    XX = setdiff([XU(indX,1), XU(indX,2)], [XU(indY,1), XU(indY,2)], 'stable', 'rows') ; 
-else 
-    XX = [XU(indX,1), XU(indX,2)] ; 
-end 
-nX = size(XX,1) ; 
-
+    if sum(indX) > 0 && sum(indY) > 0 
+        XX = setdiff([XU(indX,1), XU(indX,2)], [XU(indY,1), XU(indY,2)], 'stable', 'rows') ; 
+    else 
+        XX = [XU(indX,1), XU(indX,2)] ; 
+    end 
+    nX = size(XX,1) ; 
+end
+    
 waitbar(0.75, hWait, 'Building maps...') ;
 
 %   node marker map 
@@ -364,22 +339,28 @@ else
 end ; 
 Nxbins = nxBlocks ; 
 Nybins = nyBlocks ; 
-% [NX, CX] = hist3([XU(indX,1), XU(indX,2)], [Nxbins,Nybins]) ; 
-% [NY, CY] = hist3([XU(indY,1), XU(indY,2)], [Nxbins,Nybins]) ; 
+
+
+
+
 if max(size(traces)) <= max(size(segments)) && nInt > 0 
-    [NXY, CXY] = hist3([[XU(indX,1); XU(indY,1)], [XU(indX,2); XU(indY,2)]], [Nxbins, Nybins]) ; 
-else 
-    NXY = 0 ; 
+%    [NXY, CXY] = hist3([[XU(indX,1); XU(indY,1)], [XU(indX,2); XU(indY,2)]], [Nxbins, Nybins]) ; 
+    [NXY, CXY] = hist3a([[XU(indX,1); XU(indY,1)], [XU(indX,2); XU(indY,2)]], [Nxbins, Nybins]) ; 
+else
+    NXY = 0 ;
     CXY = 0 ; 
 end ; 
-[NI, CI] = hist3([nodeI(:,1), nodeI(:,2)], [Nxbins, Nybins]) ; 
+
+%[NI, CI] = hist3([nodeI(:,1), nodeI(:,2)], [Nxbins, Nybins]) ; 
+
+[NI, CI] = hist3a([nodeI(:,1), nodeI(:,2)], [Nxbins, Nybins]) ; 
 maxBar = max([max(max(NXY)), max(max(NI))]) ; 
+disp(['length(NXY): ', num2str(length(NXY))]);
+disp(['length(NI) : ', num2str(length(NI))]);
+disp(['maxBar     : ', num2str(maxBar)]);
 
 if max(size(traces)) <= max(size(segments)) && nInt > 0 
     f = figure ;
-%     set(gcf, 'PaperPositionMode', 'manual') ;
-%     set(gcf, 'PaperUnits', 'centimeters') ;
-%     set(gcf, 'PaperPosition', [ 2 2 21 29.7 ]) ;
 
     imagesc(cell2mat(CXY(1,1)), cell2mat(CXY(1,2)), NXY') ; 
     box on ; 
@@ -415,15 +396,7 @@ end ;
 
 if min(size(NI)) > 1 
     f = figure ;
-%     set(gcf, 'PaperPositionMode', 'manual') ;
-%     set(gcf, 'PaperUnits', 'centimeters') ;
-%     set(gcf, 'PaperPosition', [ 2 2 21 29.7 ]) ;
-    
-%     [xg, yg] = meshgrid(cell2mat(CI(1,1)), cell2mat(CI(1,2))) ; 
-%     [xq, yq] = meshgrid(linspace(min(min(cell2mat(CI(1,1)))), max(max(cell2mat(CI(1,1)))), newpoints), ...  
-%                         linspace(min(min(cell2mat(CI(1,2)))), max(max(cell2mat(CI(1,2)))), newpoints)) ; 
-%     NIinterp = interp2(xg, yg, NI', xq, yq, 'cubic') ; 
-%     contourf(xq, yq, NIinterp, nLevels) ; 
+
     imagesc(cell2mat(CI(1,1)), cell2mat(CI(1,2)), NI') ; 
     box on ; 
     axis equal ; 
@@ -462,3 +435,4 @@ disp(['Y: ', num2str(nY)]) ;
 disp(['X: ', num2str(nX)]) ; 
 
 end 
+
